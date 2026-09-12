@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="th">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -7,19 +7,48 @@
 <style>
   body{ margin:0; min-height:100vh; display:flex; align-items:center; justify-content:center;
     font-family:-apple-system,BlinkMacSystemFont,'Inter',sans-serif; background:#FBF3E7; color:#3D2B1F; text-align:center; }
-  .box{ padding:32px; }
+  .box{ padding:32px; max-width:360px; }
   .mark{ font-size:3rem; }
   h1{ font-size:1.3rem; margin:12px 0 6px; }
   p{ color:#6B5644; font-size:.9rem; }
   button{ margin-top:16px; padding:10px 24px; border-radius:999px; border:none; background:#3D2B1F; color:#FBF3E7; font-weight:700; }
+  .lang-toggle{ display:inline-flex; background:#F3E6D3; border-radius:999px; padding:3px; gap:2px; margin-bottom:14px; }
+  .lang-toggle button{ margin:0; padding:5px 11px; border-radius:999px; font-size:.72rem; font-weight:700; color:#6B5644; background:none; }
+  .lang-toggle button.active{ background:#3D2B1F; color:#FBF3E7; }
 </style>
 </head>
 <body>
   <div class="box">
+    <div class="lang-toggle" id="offLangToggle"></div>
     <div class="mark">🧁</div>
-    <h1>You're offline</h1>
-    <p>Ob-la-moon needs a connection to load new data.<br>Your last saved orders and menu are safe on this device.</p>
-    <button onclick="location.reload()">Try Again</button>
+    <h1 id="offTitle">คุณออฟไลน์อยู่</h1>
+    <p id="offDesc">Ob-la-moon ต้องการการเชื่อมต่ออินเทอร์เน็ตเพื่อโหลดข้อมูลใหม่<br>ออเดอร์และเมนูล่าสุดของคุณยังปลอดภัยอยู่ในเครื่องนี้</p>
+    <button id="offRetry" onclick="location.reload()">ลองใหม่อีกครั้ง</button>
   </div>
+  <script>
+    // Standalone copy (no external deps, must work fully offline) of the
+    // same th/en strings used by js/i18n.js, so language stays consistent
+    // with the rest of the app even on this fallback page.
+    var COPY = {
+      th: { title: 'คุณออฟไลน์อยู่',
+        desc: 'Ob-la-moon ต้องการการเชื่อมต่ออินเทอร์เน็ตเพื่อโหลดข้อมูลใหม่<br>ออเดอร์และเมนูล่าสุดของคุณยังปลอดภัยอยู่ในเครื่องนี้',
+        retry: 'ลองใหม่อีกครั้ง' },
+      en: { title: "You're offline",
+        desc: 'Ob-la-moon needs a connection to load new data.<br>Your last saved orders and menu are safe on this device.',
+        retry: 'Try Again' }
+    };
+    function applyLang(l) {
+      document.getElementById('offTitle').textContent = COPY[l].title;
+      document.getElementById('offDesc').innerHTML = COPY[l].desc;
+      document.getElementById('offRetry').textContent = COPY[l].retry;
+      document.querySelectorAll('#offLangToggle button').forEach(function(b){ b.classList.toggle('active', b.dataset.l === l); });
+      try { localStorage.setItem('oblamoon_lang', l); } catch (e) {}
+    }
+    var saved = 'th';
+    try { saved = localStorage.getItem('oblamoon_lang') || 'th'; } catch (e) {}
+    document.getElementById('offLangToggle').innerHTML =
+      '<button data-l="th" onclick="applyLang(\'th\')">TH</button><button data-l="en" onclick="applyLang(\'en\')">EN</button>';
+    applyLang(saved === 'en' ? 'en' : 'th');
+  </script>
 </body>
 </html>

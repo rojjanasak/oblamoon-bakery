@@ -7,7 +7,7 @@
    proper network-first strategy for page navigations.
    ============================================================ */
 
-const CACHE_NAME = 'oblamoon-shell-v2';
+const CACHE_NAME = 'oblamoon-shell-v3';
 
 const SHELL_ASSETS = [
   'index.html',
@@ -16,6 +16,7 @@ const SHELL_ASSETS = [
   'manifest.json',
   'css/style.css',
   'js/data.js',
+  'js/i18n.js',
   'js/app.js',
   'js/customer.js',
   'icons/icon-192.png',

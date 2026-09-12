@@ -8,6 +8,12 @@ const S = DB.state;
 let currentRole = 'Admin'; // Admin | Manager | Cashier | Kitchen | Viewer
 let charts = {}; // keep chart instances so we can destroy/redraw
 
+const AUTH_KEY = 'oblamoon_auth';
+const DEMO_USER = '1';
+const DEMO_PASS = '1';
+function isLoggedIn() { return sessionStorage.getItem(AUTH_KEY) === 'yes'; }
+function logout() { sessionStorage.removeItem(AUTH_KEY); boot(); }
+
 const money = (n) => S.settings.currency + Number(n || 0).toLocaleString('en-US', { maximumFractionDigits: 2 });
 const menuById = (id) => S.menu.find(m => m.id === id);
 const canSeeMoney = () => ['Admin', 'Manager'].includes(currentRole);
@@ -50,7 +56,48 @@ function logChange(item, action, oldValue, newValue) {
   DB.save();
 }
 
-/* ================= LAYOUT ================= */
+/* ================= LOGIN ================= */
+function renderLogin() {
+  document.getElementById('app').innerHTML = `
+    <div class="login-shell">
+      <div class="login-card">
+        <div class="mark"><i class="bi bi-cupcake"></i></div>
+        <h1>${S.settings.shopName}</h1>
+        <p>${S.settings.tagline} · Shop Management</p>
+        <form id="loginForm" autocomplete="off">
+          <label>Username</label>
+          <input class="form-control mb-3" id="loginUser" placeholder="Username" autofocus>
+          <label>Password</label>
+          <input type="password" class="form-control mb-2" id="loginPass" placeholder="Password">
+          <div id="loginError" class="text-danger small mb-2" style="min-height:18px;"></div>
+          <button type="submit" class="btn btn-brand w-100 py-2">Log In</button>
+        </form>
+        <p class="hint">Demo credentials — username: <b>1</b> &nbsp; password: <b>1</b></p>
+      </div>
+    </div>
+  `;
+  document.getElementById('loginForm').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const u = document.getElementById('loginUser').value.trim();
+    const p = document.getElementById('loginPass').value.trim();
+    if (u === DEMO_USER && p === DEMO_PASS) {
+      sessionStorage.setItem(AUTH_KEY, 'yes');
+      boot();
+    } else {
+      document.getElementById('loginError').textContent = 'Incorrect username or password.';
+    }
+  });
+}
+
+function boot() {
+  if (isLoggedIn()) {
+    renderAll();
+  } else {
+    renderLogin();
+  }
+}
+
+
 function renderShell() {
   const app = document.getElementById('app');
   app.innerHTML = `
@@ -69,6 +116,7 @@ function renderShell() {
         <select id="role-select" class="form-select form-select-sm mb-2">
           ${['Admin','Manager','Cashier','Kitchen','Viewer'].map(r => `<option ${r===currentRole?'selected':''}>${r}</option>`).join('')}
         </select>
+        <button class="btn btn-outline-brand btn-sm w-100" onclick="logout()"><i class="bi bi-box-arrow-right"></i> Log Out</button>
       </div>
     </aside>
     <div class="main-scroll">
@@ -127,6 +175,12 @@ function openMoreSheet() {
                     <div style="font-size:.72rem;font-weight:600;margin-top:6px;">${i.label}</div>
                   </button>
                 </div>`).join('')}
+              <div class="col">
+                <button class="btn w-100 py-3" style="background:var(--cream-deep);border-radius:14px;border:none;" data-bs-dismiss="modal" onclick="logout()">
+                  <i class="bi bi-box-arrow-right" style="font-size:1.3rem;"></i>
+                  <div style="font-size:.72rem;font-weight:600;margin-top:6px;">Log Out</div>
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -195,7 +249,7 @@ function renderAll() {
   renderCartBar();
 }
 
-window.addEventListener('hashchange', renderAll);
+window.addEventListener('hashchange', () => { if (isLoggedIn()) renderAll(); });
 
 /* ================= DASHBOARD ================= */
 function renderDashboard(el) {
@@ -1105,9 +1159,8 @@ function renderAudit(el) {
 
 /* ================= BOOT ================= */
 document.addEventListener('DOMContentLoaded', () => {
-  renderAll();
+  boot();
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('service-worker.js').catch(() => {});
   }
 });
-
